@@ -173,8 +173,16 @@ ruby_block "block_until_operational" do
     loop do
       url = URI.parse("#{node.jenkins.server.url}/job/test/config.xml")
       res = Chef::REST::RESTRequest.new(:GET, url, nil).call
-      break if res.kind_of?(Net::HTTPSuccess) or res.kind_of?(Net::HTTPNotFound)
-      Chef::Log.debug "service[jenkins] not responding OK to GET /job/test/config.xml #{res.inspect}"
+      if res.kind_of?(Net::HTTPSuccess)
+        break
+      elsif res.kind_of?(Net::HTTPNotFound)
+        Chef::Log.debug "service[jenkins] 404'd on GET /job/test/config.xml #{res.inspect}"
+        break
+      elsif res.kind_of?(Net::HTTPForbidden)
+        Chef::Log.debug "service[jenkins] 403'd on GET /job/test/config.xml #{res.inspect}"
+        break
+      end
+
       sleep 1
     end
   end
