@@ -117,14 +117,6 @@ when "ubuntu", "debian"
     end
   end
 
-  template '/etc/default/jenkins' do
-    source 'jenkins.default.erb'
-    owner 'root'
-    group 'root'
-    mode '0644'
-    notifies :restart, 'service[jenkins]'
-  end
-
   pid_file = "/var/run/jenkins/jenkins.pid"
   install_starts_service = true
 
@@ -203,9 +195,6 @@ if node.platform == "ubuntu"
     notifies :stop, "service[jenkins]", :immediately
     notifies :create, "ruby_block[netstat]", :immediately #wait a moment for the port to be released
     notifies :install, "package[jenkins]", :immediately
-    unless install_starts_service
-      notifies :start, "service[jenkins]", :immediately
-    end
     notifies :create, "ruby_block[block_until_operational]", :immediately
     creates "/usr/share/jenkins/jenkins.war"
   end
@@ -262,6 +251,15 @@ log "plugins updated, restarting jenkins" do
       }.size > 0
     end
   end
+end
+
+# Wait until after everything is installed to modify the defaults
+template '/etc/default/jenkins' do
+  source 'jenkins.default.erb'
+  owner 'root'
+  group 'root'
+  mode '0644'
+  notifies :restart, 'service[jenkins]'
 end
 
 # Front Jenkins with an HTTP server
