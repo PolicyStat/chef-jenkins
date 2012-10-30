@@ -104,13 +104,6 @@ when "ubuntu", "debian"
       action :nothing
     end
 
-    template '/etc/default/jenkins' do
-      source 'jenkins.default.erb'
-      owner 'root'
-      group 'root'
-      mode '0644'
-      notifies :restart, 'service[jenkins]'
-    end
   when "ubuntu"
     include_recipe "apt"
     include_recipe "java"
@@ -122,6 +115,14 @@ when "ubuntu", "debian"
       key "http://pkg.jenkins-ci.org/debian/jenkins-ci.org.key"
       action :add
     end
+  end
+
+  template '/etc/default/jenkins' do
+    source 'jenkins.default.erb'
+    owner 'root'
+    group 'root'
+    mode '0644'
+    notifies :restart, 'service[jenkins]'
   end
 
   pid_file = "/var/run/jenkins/jenkins.pid"
